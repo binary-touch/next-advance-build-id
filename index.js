@@ -14,6 +14,9 @@ function util () {
   if (!_util) _util = require('util')
   return _util
 }
+function isArrayNotEmptyAndHasString(arr) {
+  return Array.isArray(arr) && arr.some(element => typeof element === 'string' && element.trim().length > 0);
+}
 
 // lazily load promisified functions that might not be used
 let _access, _execFile, _readFile
@@ -63,7 +66,7 @@ function getOpts (opts) {
 
 // valid opts:
 // - dir (string): in case `process.cwd()` isn't suitable
-// - describe (boolean): use `git describe --tags` instead of `git rev-parse HEAD`
+// - describeFlags (string[]): use `git describe --tags --always --first-parent` instead of `git rev-parse HEAD`
 // - fallbackToSha (boolean): if opts.describe and no tags found, fallback to latest commit sha
 const nextBuildId = async opts => {
   opts = getOpts(opts)
@@ -85,11 +88,11 @@ const nextBuildId = async opts => {
   }
   if (dir === root || attempts >= 999) dir = inputDir
 
-  // if opts.describe, use `git describe --tags`
+  // if opts.describeFlags, use `git describe` with provided flags.
   let id
-  if (opts.describe) {
+  if (isArrayNotEmptyAndHasString(opts.describeFlags)) {
     try {
-      id = await git(dir, ['describe', '--tags'])
+      id = await git(dir, ['describe', ...opts.describeFlags])
       if (!id) throw new Error('Output of `git describe --tags` was empty!')
       return id
     } catch (err) {
