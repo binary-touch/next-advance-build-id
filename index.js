@@ -144,9 +144,9 @@ nextBuildId.sync = opts => {
 
   // if opts.describe, use `git describe --tags`
   let id
-  if (opts.describe) {
+  if (isArrayNotEmptyAndHasString(opts.describeFlags)) {
     try {
-      id = gitSync(dir, ['describe', '--tags'])
+      id = gitSync(dir, ['describe', ...opts.describeFlags])
       if (!id) throw new Error('Output of `git describe --tags` was empty!')
       return id
     } catch (err) {
