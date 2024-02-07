@@ -66,6 +66,7 @@ function getOpts (opts) {
 
 // valid opts:
 // - dir (string): in case `process.cwd()` isn't suitable
+// - semvar (boolean): create only major.minor tags like v1.0 rest patch will be added by using `$(git describe --tags --abbrev=0).$(git rev-list --count --first-parent $(git describe --tags --abbrev=0)..HEAD)-g$(git rev-parse --short=8 HEAD)`
 // - describeFlags (string[]): use `git describe --tags --always --first-parent` instead of `git rev-parse HEAD`
 // - fallbackToSha (boolean): if opts.describe and no tags found, fallback to latest commit sha
 const nextBuildId = async opts => {
@@ -88,9 +89,20 @@ const nextBuildId = async opts => {
   }
   if (dir === root || attempts >= 999) dir = inputDir
 
-  // if opts.describeFlags, use `git describe` with provided flags.
   let id
-  if (isArrayNotEmptyAndHasString(opts.describeFlags)) {
+  if (opts.semvar) {
+    try {
+      tag = git(dir, ['describe', '--tags', '--abbrev=0'])
+      if (!tag) throw new Error('Output of `git describe --tags --abbrev=0` was empty!')
+      patch = git(dir, ['rev-list', '--count', '--first-parent', `${tag}..HEAD`])
+      hash = git(dir, ['rev-parse', '--short=8', 'HEAD'])
+      id = `${tag}.${patch}-g${hash}`
+      return id
+    } catch (err) {
+      if (!opts.fallbackToSha) throw err
+    }
+  } else if (isArrayNotEmptyAndHasString(opts.describeFlags)) {
+    // if opts.describeFlags, use `git describe` with provided flags.
     try {
       id = await git(dir, ['describe', ...opts.describeFlags])
       if (!id) throw new Error('Output of `git describe --tags` was empty!')
@@ -144,7 +156,18 @@ nextBuildId.sync = opts => {
 
   // if opts.describe, use `git describe --tags`
   let id
-  if (isArrayNotEmptyAndHasString(opts.describeFlags)) {
+  if (opts.semvar) {
+    try {
+      tag = gitSync(dir, ['describe', '--tags', '--abbrev=0'])
+      if (!tag) throw new Error('Output of `git describe --tags --abbrev=0` was empty!')
+      patch = gitSync(dir, ['rev-list', '--count', '--first-parent', `${tag}..HEAD`])
+      hash = gitSync(dir, ['rev-parse', '--short=8', 'HEAD'])
+      id = `${tag}.${patch}-g${hash}`
+      return id
+    } catch (err) {
+      if (!opts.fallbackToSha) throw err
+    }
+  } else if (isArrayNotEmptyAndHasString(opts.describeFlags)) {
     try {
       id = gitSync(dir, ['describe', ...opts.describeFlags])
       if (!id) throw new Error('Output of `git describe --tags` was empty!')

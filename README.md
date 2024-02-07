@@ -17,6 +17,18 @@ module.exports = {
 // => 'f9fc968afa249d162c924a8d5b4ce6562c164c2e'
 ```
 
+if you use a build id relative to most recent tag in semvar style in your git repo, pass `semvar: true` as an option and the outout will be a semvar major.minor version from tag and patch version from a number first parent commits since recent tag with latest commit short hash.
+
+```js
+// next.config.js
+const nextBuildId = require('next-advance-build-id')
+module.exports = {
+  generateBuildId: () => nextBuildId({ dir: __dirname, semvar: true })
+}
+// => 'v1.0.0' (no changes since v1.0.0 tag)
+// => 'v1.0.19-ga8f7eee' (19 changes since v1.0.0 tag and the latest commit short hash)
+```
+
 If you'd rather use a build id relative to the most recent tag in your git repo, pass `describe: true` as an option and the output of `git describe --tags` will be used instead:
 
 ```js
@@ -52,6 +64,8 @@ The options supported are:
 - `dir` (string, default `process.cwd()`): a directory within the local git repository
 
     Using `__dirname` from your next.config.js module is generally safe. The default value is assumed to be the directory from which you are running the `next build` command, but this may not be correct based on how you build your Next.js app.
+
+- `semvar` (boolean, default `undefined`): use git tag as major.minor reference and adds all first parents of merge commits to represent patches.
 
 - `describeFlags` (string[], default `undefined`): use git tag description instead of latest commit sha
 
