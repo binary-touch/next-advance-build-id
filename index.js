@@ -92,10 +92,10 @@ const nextBuildId = async opts => {
   let id
   if (opts.semvar) {
     try {
-      tag = git(dir, ['describe', '--tags', '--abbrev=0'])
+      const tag = await git(dir, ['describe', '--tags', '--abbrev=0'])
       if (!tag) throw new Error('Output of `git describe --tags --abbrev=0` was empty!')
-      patch = git(dir, ['rev-list', '--count', '--first-parent', `${tag}..HEAD`])
-      hash = git(dir, ['rev-parse', '--short=8', 'HEAD'])
+      const patch = await git(dir, ['rev-list', '--count', '--first-parent', `${tag}..HEAD`])
+      const hash = await git(dir, ['rev-parse', '--short=8', 'HEAD'])
       id = `${tag}.${patch}-g${hash}`
       return id
     } catch (err) {
@@ -158,10 +158,10 @@ nextBuildId.sync = opts => {
   let id
   if (opts.semvar) {
     try {
-      tag = gitSync(dir, ['describe', '--tags', '--abbrev=0'])
+      const tag = gitSync(dir, ['describe', '--tags', '--abbrev=0'])
       if (!tag) throw new Error('Output of `git describe --tags --abbrev=0` was empty!')
-      patch = gitSync(dir, ['rev-list', '--count', '--first-parent', `${tag}..HEAD`])
-      hash = gitSync(dir, ['rev-parse', '--short=8', 'HEAD'])
+      const patch = gitSync(dir, ['rev-list', '--count', '--first-parent', `${tag}..HEAD`])
+      const hash = gitSync(dir, ['rev-parse', '--short=8', 'HEAD'])
       id = `${tag}.${patch}-g${hash}`
       return id
     } catch (err) {
